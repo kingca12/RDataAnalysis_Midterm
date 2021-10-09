@@ -1,0 +1,70 @@
+---
+title: "Midterm_Data Analysis and Biostats with R"
+author: "Carla King"
+date: "27/09/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Midterm Project | 
+
+
+
+```{r}
+#Set WD and import data
+
+setwd("/Users/carlaking/Documents/Education/PhD/NYU/Coursework/Data Analysis and Biostats w R/Midterm")
+NSDUH_data <- read.delim("NSDUH_2019_Tab.txt") 
+
+#NOTE TO SELF -upload to github and pull from there
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r summary stats, echo=TRUE}
+
+table(NSDUH_data$COUTYP4)
+summary(NSDUH_data$COUTYP4)
+summary(NSDUH_data$AGE2)
+cellworking <- table(NSDUH_data$CELLWRKNG)
+plot(cellworking)
+
+age <- table(NSDUH_data$AGE2)
+plot(age)
+```
+
+Identify variables of interest in your dataset for analysis and presentation. Explain why they may be of interest or use in your research. What changes might need to be made to make them easier to analyze (e.g. dichotomization, normalizing).
+
+Research Question: Is unemployment for the duration of the past 12 months associated with past month risky use of alcohol in US adults ?
+
+Dataset: 2019 National Survey on Drug Use and Health (NSDUH)
+
+Outcome Variable: Reported risky or non-risky alcohol use in the past month
+BNGDRMDAYS (# of days binged used alcohol in past month)
+  #Criteria for risky substance use is based on the number of binge drinking days in the past month (ie. men who had 5 or more drinks in one sitting, and women who had 4 or more drinks in one sitting (ref https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2695521/)
+  #RECODING: dichotomize according to criteria for risky and non-risky use (risky use =1 or more days of binge drinking in a month)
+
+Independent Variables 
+WRKDPSTYR #past 12 months, worked at any job
+  #This is the predictor variable of interest and is needed to code unemployment in the past 12 months
+  #RECODING: remove 'dont know, NAs/uneligible for work, blanks, skips'; check if this question was skipped in those 12-17
+
+IRSEX #participant sex; this may be a confounder or an effect modifier in the relationship between employment and binge drinking
+CATAGE #participant age; potential confounder in the analysis
+  #RECODING: need to exclude under 18 yr to better represent the employed population
+NEWRACE #race 
+NEWRACE2 #ethnicity
+  #RECODING: may need to decrease the number of levels here depending on the size of the final sample
+HEALTH2 #self-described health status
+  #May not be included in the final analysis, but an exploratory variable to report for the sample to see how many people who did have risky use felt they still had good or excellent health
+
+```{r}
+
+```
+
