@@ -2,67 +2,241 @@
 title: "Midterm_Data Analysis and Biostats with R"
 author: "Carla King"
 date: "27/09/2021"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Midterm Project | 
+## Midterm Project
 
+SUMMARY OF PROJCET
 
-
-```{r}
-#Set WD and import data
-
-setwd("/Users/carlaking/Documents/Education/PhD/NYU/Coursework/Data Analysis and Biostats w R/Midterm")
-NSDUH_data <- read.delim("NSDUH_2019_Tab.txt") 
-
-#NOTE TO SELF -upload to github and pull from there
-
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r summary stats, echo=TRUE}
-
-table(NSDUH_data$COUTYP4)
-summary(NSDUH_data$COUTYP4)
-summary(NSDUH_data$AGE2)
-cellworking <- table(NSDUH_data$CELLWRKNG)
-plot(cellworking)
-
-age <- table(NSDUH_data$AGE2)
-plot(age)
-```
-
-Identify variables of interest in your dataset for analysis and presentation. Explain why they may be of interest or use in your research. What changes might need to be made to make them easier to analyze (e.g. dichotomization, normalizing).
-
-Research Question: Is unemployment for the duration of the past 12 months associated with past month risky use of alcohol in US adults ?
+Research Question: Is unemployment for the past 12 months associated with risky use of alcohol in US adults?
 
 Dataset: 2019 National Survey on Drug Use and Health (NSDUH)
 
-Outcome Variable: Reported risky or non-risky alcohol use in the past month
-BNGDRMDAYS (# of days binged used alcohol in past month)
-  #Criteria for risky substance use is based on the number of binge drinking days in the past month (ie. men who had 5 or more drinks in one sitting, and women who had 4 or more drinks in one sitting (ref https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2695521/)
-  #RECODING: dichotomize according to criteria for risky and non-risky use (risky use =1 or more days of binge drinking in a month)
 
-Independent Variables 
-WRKDPSTYR #past 12 months, worked at any job
-  #This is the predictor variable of interest and is needed to code unemployment in the past 12 months
-  #RECODING: remove 'dont know, NAs/uneligible for work, blanks, skips'; check if this question was skipped in those 12-17
+```{r Import Data, echo=FALSE}
+#STEP 1: IMPORT DATA
 
-IRSEX #participant sex; this may be a confounder or an effect modifier in the relationship between employment and binge drinking
-CATAGE #participant age; potential confounder in the analysis
-  #RECODING: need to exclude under 18 yr to better represent the employed population
-NEWRACE #race 
-NEWRACE2 #ethnicity
-  #RECODING: may need to decrease the number of levels here depending on the size of the final sample
-HEALTH2 #self-described health status
-  #May not be included in the final analysis, but an exploratory variable to report for the sample to see how many people who did have risky use felt they still had good or excellent health
+#1a.INSTALL AND LOAD PACKAGES
+install.packages("dplyr")
+install.packages("tidyverse")
+install.packages("ggplot2")
+install.packages("table1")
+install.packages("RColorBrewer")
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(table1)
+library(RColorBrewer)
+display.brewer.all(colorblindFriendly = TRUE)
+#1b.CREATE NEW DATAFRAMES FROM MAIN DATASET
+# Set WD and import data
+# setwd("/Users/carlaking/Documents/Education/PhD/NYU/Coursework/Data Analysis and Biostats w R/Midterm")
+
+#1c.DOWNLOAD DATASET: https://www.datafiles.samhsa.gov/dataset/national-survey-drug-use-and-health-2019-nsduh-2019-ds0001
+# NSDUH_data <- read.delim("NSDUH_2019_Tab.txt")
+# names(NSDUH_data)
+
+#1d.CREATE UNIQUE IDENTIFIER
+# NSDUH_data <- tibble::rowid_to_column(NSDUH_data, "ID") 
+
+#1e.CREATE DFS WITH COLUMNS OF INTEREST
+# SUD_iv <- data.frame(NSDUH_data$ID, NSDUH_data$BNGDRMDAYS)
+# SUD_dv <- data.frame(NSDUH_data$ID,NSDUH_data$WRKDPSTYR)
+# SUD_demo <- data.frame(NSDUH_data$ID,NSDUH_data$IRSEX, NSDUH_data$CATAGE)
+# SUD_demo2 <- data.frame(NSDUH_data$ID,NSDUH_data$NEWRACE, NSDUH_data$NEWRACE2)
+# SUD_health <- data.frame(NSDUH_data$ID,NSDUH_data$HEALTH2)
+
+#1f.CREATE TABLES FROM DATAFRAMES (FOR GITHUB)
+# write.table(SUD_iv, "/Users/carlaking/Documents/Education/PhD/NYU/Coursework/Data Analysis and Biostats w R/Midterm/SUD_iv.txt")
+# write.table(SUD_dv, "/Users/carlaking/Documents/Education/PhD/NYU/Coursework/Data Analysis and Biostats w R/Midterm/SUD_dv.txt")
+# write.table(SUD_demo, "/Users/carlaking/Documents/Education/PhD/NYU/Coursework/Data Analysis and Biostats w R/Midterm/SUD_demo.txt")
+# write.table(SUD_demo2, "/Users/carlaking/Documents/Education/PhD/NYU/Coursework/Data Analysis and Biostats w R/Midterm/SUD_demo2.txt")
+# write.table(SUD_health, "/Users/carlaking/Documents/Education/PhD/NYU/Coursework/Data Analysis and Biostats w R/Midterm/SUD_health.txt")
+
+#1g.IMPORT DATASETS FROM GITHUB
+SUD_demos<- read.table("https://raw.githubusercontent.com/kingca12/RDataAnalysis_Midterm/main/SUD_demo.txt",header=T, sep =" ", dec =".", quote ="\"")
+SUD_demos2 <- read.table("https://raw.githubusercontent.com/kingca12/RDataAnalysis_Midterm/main/SUD_demo2.txt", header=T, sep =" ", dec =".", quote ="\"")
+SUD_employ <- read.table("https://raw.githubusercontent.com/kingca12/RDataAnalysis_Midterm/main/SUD_dv.txt", header=T, sep =" ", dec =".", quote ="\"")
+SUD_drink <- read.table("https://raw.githubusercontent.com/kingca12/RDataAnalysis_Midterm/main/SUD_iv.txt", header=T, sep =" ", dec =".", quote ="\"")
+SUD_health <- read.table("https://raw.githubusercontent.com/kingca12/RDataAnalysis_Midterm/main/SUD_health.txt", header=T, sep =" ", dec =".", quote ="\"")
+
+#1h.MERGE DATASETS BY ID
+SUDdata1 <- merge(SUD_demos, SUD_demos2, by.x="NSDUH_data.ID", by.y="NSDUH_data.ID")
+SUDdata2 <- merge(SUD_drink, SUD_employ, by.x="NSDUH_data.ID", by.y="NSDUH_data.ID")
+SUDdata <- merge(SUDdata1, SUDdata2, by.x="NSDUH_data.ID", by.y="NSDUH_data.ID")
+SUDdata <- merge(SUDdata, SUD_health, by.x="NSDUH_data.ID", by.y="NSDUH_data.ID")  
+
+#1i. RENAME VARIABLES
+names(SUDdata)
+SUDdata <- rename(SUDdata, "ID"=NSDUH_data.ID, "age"=NSDUH_data.CATAGE, "sex"=NSDUH_data.IRSEX, "race"=NSDUH_data.NEWRACE, "ethnicity"=NSDUH_data.NEWRACE2, "binge"=NSDUH_data.BNGDRMDAYS, "employ"=NSDUH_data.WRKDPSTYR, "health"=NSDUH_data.HEALTH2)
+names(SUDdata)
+```
+
+
+```{r cleandata, echo=TRUE}
+#STEP TWO: CLEAN DATA
+summary(SUDdata)
+head(SUDdata)
+
+#RISKY USE (DEPENDENT VARIABLE)
+  #Codebook variable:BNGDRMDAYS
+  #Summary: Numnber of days binge used alcohol in past month; 
+  #Plan: criteria for risky substance use is based on the number of binge drinking days in the past     month (ie. men who had 5 or more drinks in one sitting, and women who had 4 or more drinks in one sitting) (ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2695521/)dichotomize according to criteria for risky and non-risky use (risky use defined as 1 or more days of binge drinking in a month
+  #Steps:check for nulls, check class, dicotimize as risky or non-risky use, re-code as factor, relabel
+summary(SUDdata$binge)
+table(SUDdata$binge)
+class(SUDdata$binge)
+SUDdata$binge_coded<- ifelse(SUDdata$binge <5, SUDdata$binge_coded <- 1, SUDdata$binge_coded<- 0)
+table(SUDdata$binge_coded, SUDdata$binge)
+SUDdata$binge_coded <- recode_factor(SUDdata$binge_coded, "0"=0, "1"=1)
+SUDdata$binge_coded <- factor(SUDdata$binge_coded, labels = c("Non-Risky Use","Risky Use"))
+class(SUDdata$binge_coded)
+
+#EMPLOYMENT (PREDICTOR VARIABLE)
+  #Codebook variable:BNGDRMDAYS (past 12 months, worked at any job)
+  #Summary: predictor variable of interest
+  #Plan: check NAs/code 'dont know, NAs/uneligible for work, blanks, skips' as NAs, make factor, label
+summary(SUDdata$employ)
+table(SUDdata$employ)
+SUDdata$employ_coded <-  replace(SUDdata$employ, SUDdata$employ == 99 | SUDdata$employ == 85 | SUDdata$employ == 97 | SUDdata$employ ==94 | SUDdata$employ ==98, NA) #remove unanswered/null values 
+table(SUDdata$employ_coded)
+SUDdata$employ_coded<- recode_factor(SUDdata$employ_coded,  "1"=0, "2"=1) 
+class(SUDdata$employ_coded)
+SUDdata$employ_coded <- factor(SUDdata$employ_coded, labels = c("Employed","Unemployed"))
+
+#SEX
+    #Codebook variable:IRSEX
+                        #1 = males
+                        #2 = females
+    #Summary: participant sex; potential confounder
+    #Steps:check for nulls, check class, recode as factor, relabel
+summary(SUDdata$sex)
+table(SUDdata$sex)
+class(SUDdata$sex)
+SUDdata$sex<- recode_factor(SUDdata$sex, "1"=0, "2"=1) 
+SUDdata$sex<- factor(SUDdata$sex, labels = c("Male","Female"))
+table(SUDdata$sex)
+
+#AGE 
+    #Codebook variable: CATAGE
+                        #1 = 12-17
+                        #2 = 18-25
+                        #3 = 26-34 
+                        #4 = 35 or Older 
+    #Summary: participant age; potential confounder
+    #Steps:check for nulls, exclude under 18 yr to better represent the employed population; recode as a   factor, relabel
+summary(SUDdata$age)
+table(SUDdata$age)
+SUDdata<-SUDdata[!(SUDdata$age==1),] #remove participants <18 years old from dataset
+SUDdata$age_coded <- recode_factor(SUDdata$age, "2"=1, "3"=2, "4"=3)
+SUDdata$age_coded <- factor(SUDdata$age_coded, labels = c("18-25","26-34",">34"))
+table(SUDdata$age_coded)
+
+#RACE
+    #Codebook variable:NEWRACE 
+                      # 1 = NonHisp White 
+                      # 2 = NonHisp Black/Afr Am
+                      # 3 = NonHisp Native Am/AK Native 
+                      # 4 = NonHisp Native HI/Other Pac Isl 
+                      # 5 = NonHisp Asian 
+                      # 6 = NonHisp more than one race 
+                      # 7 = Hispanic 
+    #Summary: participant race; potential confounder
+    #Steps:check for nulls, recode as factor, relabel
+summary(SUDdata$race)
+table(SUDdata$race) 
+class(SUDdata$race)
+SUDdata$race <- recode_factor(SUDdata$race, "1"=1 , "2"=2, "3"=3, "4"=4, "5"=5, "6"=6, "7"=7)
+SUDdata$race <- factor(SUDdata$race, labels = c("White", "Black", "Native American", "Native HI/Pac Islander", "Asian", "Multiracial", "Hispanic"))
+table(SUDdata$race)
+
+#hispanic vs. non-hispanic
+  #Codebook variable:NEWRACE2 
+                      # 1 = NonHisp White 
+                      # 2 = NonHisp Black/Afr Am
+                      # 3 = NonHisp Native Am/AK Native 
+                      # 4 = NonHisp Native HI/Other Pac Isl 
+                      # 5 = NonHisp Asian 
+                      # 6 = NonHisp more than one race 
+                      # 7 = Hispanic 
+    #Summary: participant ethnicity; potential confounder
+    #Steps:recode as factor, relabel
+SUDdata$ethnicity_coded <- ifelse(SUDdata$ethnicity <7, SUDdata$ethnicity_coded<- 0, SUDdata$ethnicity_coded<- 1)
+table(SUDdata$ethnicity_coded) 
+SUDdata$ethnicity_coded <- recode_factor(SUDdata$ethnicity_coded, "0"=0, "1"=1)
+SUDdata$ethnicity_coded <- factor(SUDdata$ethnicity_coded, labels = c("Non-Hispanic", "Hispanic"))
+table(SUDdata$ethnicity_coded) 
+
+#HEALTH STATUS 
+#Codebook variable:HEALTH2
+              # . = Unknown (Otherwise)
+              # 1 = Excellent (HEALTH=1) 
+              # 2 = Very Good (HEALTH=2) 
+              # 3 = Good (HEALTH=3) 
+              # 4 = Fair/Poor (HEALTH=4,5)
+    #Summary: participant self-report health status; variable of interest
+    #Steps: check for NAs, recode as factor, relabel
+summary(SUDdata$health)
+table(SUDdata$health) 
+class(SUDdata$health)
+SUDdata$health <- recode_factor(SUDdata$health, "1"=1, "2"=2, "3"=3, "4"=4)
+SUDdata$health <- factor(SUDdata$health, labels=c("Excellent", "Very Good", "Good", "Fair/Poor"))
+table(SUDdata$health) 
+ 
+#REMOVE NAs FROM PREDICTOR VARIABLE
+SUDdata_noNas<-SUDdata[!is.na(SUDdata$employ_coded),] #remove rows with NAs in employment status
+summary(SUDdata_noNas)
+head(SUDdata_noNas)
+
+
+
+```
+
+```{r exploration, echo=TRUE}
+
+#VISUALIZE VARIABLES
+par(mfrow = c(2,3))
+barplot(table(SUDdata_noNas$binge_coded), main="Substance Use Behavior",  ylab="Count", col="azure4")
+barplot(table(SUDdata_noNas$employ_coded), main="Employment Status", ylab="Count", col="darkblue")
+barplot(table(SUDdata_noNas$sex), main="Sex", ylab="Count", col="cadetblue4", font.axis=1)
+barplot(table(SUDdata_noNas$race), main="Race", ylab="Count", col="darkred",las=2)
+barplot(table(SUDdata_noNas$ethnicity_coded), main="Ethnicity", ylab="Count", col="darkgoldenrod2")
+barplot(table(SUDdata_noNas$health), main="Health Status", ylab="Count", col="darkorchid4", las=2)
+```
+
+
+## Analysis
+
+
+
+```{r analysis, echo=TRUE}
+label(SUDdata_noNas$age_coded) <- "Age"
+label(SUDdata_noNas$sex)  <- "Sex"
+label(SUDdata_noNas$race) <- "Race"
+label(SUDdata_noNas$ethnicity_coded)  <- "Ethnicity"
+label(SUDdata_noNas$health)  <- "Health Status"
+label(SUDdata_noNas$employ_coded)  <- "Employment"
+
+table1(~employ_coded + sex + age_coded + race + ethnicity_coded + health | binge_coded, data=SUDdata_noNas, label(SUDdata_noNas)  <- "Characteristics",
+ overall="Total")
+
+par(mfrow = c(1,2))
+ggplot(SUDdata_noNas) + geom_bar(aes(x =binge_coded, fill=employ_coded)) + xlab("Risky Substance Use") + ylab("Count") + theme(legend.title = element_blank()) + scale_fill_brewer(palette ="Dark2",direction=1)
+chisq.test(SUDdata_noNas$employ_coded, SUDdata_noNas$binge_coded, correct=FALSE)
+model <-  glm(binge_coded ~ employ_coded +age_coded + sex + race, data = SUDdata_noNas, family = "binomial")
+summary(model)
+
+ggplot(SUDdata_noNas) + geom_bar(aes(x =binge_coded, fill=health)) + xlab("Substance Use Behavior") + ylab("Count") + scale_fill_brewer(palette ="RdBu", direction=-1) + labs(fill="Health Status")
+```
+
+
 
 ```{r}
 
